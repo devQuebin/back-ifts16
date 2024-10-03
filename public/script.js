@@ -10,38 +10,48 @@ const messages = document.getElementById("messages");
 
 let username = "";
 let avatarUrl = "";
+let loadedMessages = new Set();
 
 // Cargar el historial desde localStorage al iniciar
 window.onload = () => {
   const storedMessages = JSON.parse(localStorage.getItem("chatHistory")) || [];
   storedMessages.forEach((data) => {
-    addMessageToChat(data);
+    if (!loadedMessages.has(data.timestamp + data.user)) {
+      addMessageToChat(data);
+      loadedMessages.add(data.timestamp + data.user);
+    }
   });
   window.scrollTo(0, document.body.scrollHeight);
 };
 
 // Función para agregar el mensaje al chat y localStorage
 function addMessageToChat(data) {
-  const item = document.createElement("li");
+  //verifica si el mje ya fue cargaado para evitar duplicados
+  if (!loadedMessages.has(data.timestamp + data.user)) {
+    const item = document.createElement("li");
 
-  if (data.avatarUrl) {
-    const img = document.createElement("img");
-    img.src = data.avatarUrl;
-    img.alt = `${data.user} avatar`;
-    item.appendChild(img);
+    if (data.avatarUrl) {
+      const img = document.createElement("img");
+      img.src = data.avatarUrl;
+      img.alt = `${data.user} avatar`;
+      item.appendChild(img);
+    }
+
+    const messageText = document.createElement("span");
+    messageText.textContent = `${data.timestamp} - ${data.user}: ${data.message}`;
+    item.appendChild(messageText);
+
+    messages.appendChild(item);
+    window.scrollTo(0, document.body.scrollHeight);
+
+    // Guardar el mensaje en localStorage
+    const storedMessages =
+      JSON.parse(localStorage.getItem("chatHistory")) || [];
+    storedMessages.push(data);
+    localStorage.setItem("chatHistory", JSON.stringify(storedMessages));
+
+    loadedMessages.add(data.timestamp + data.user);
   }
-
-  const messageText = document.createElement("span");
-  messageText.textContent = `${data.timestamp} - ${data.user}: ${data.message}`;
-  item.appendChild(messageText);
-
-  messages.appendChild(item);
-  window.scrollTo(0, document.body.scrollHeight);
-
-  // Guardar el mensaje en localStorage
-  const storedMessages = JSON.parse(localStorage.getItem("chatHistory")) || [];
-  storedMessages.push(data);
-  localStorage.setItem("chatHistory", JSON.stringify(storedMessages));
 }
 
 setNameButton.addEventListener("click", () => {
